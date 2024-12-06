@@ -1,9 +1,19 @@
+# from flask import Flask, request, jsonify
+# import pickle
+# import pandas as pd
+
+
 from flask import Flask, request, jsonify
 import pickle
 import pandas as pd
 from flask_cors import CORS, cross_origin
+
 # Initialize Flask app
 app = Flask(__name__)
+
+# # Initialize Flask app
+# app = Flask(__name__)
+cors = CORS(app) # allow CORS for all domains on all routes.
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Load the pickled dataset
@@ -22,7 +32,7 @@ def predict_result():
       
 
         # Define mappings for district names to district codes and crime types
-        district_names ={
+        districts_names ={
     'Bagerhat': '0',
     'Bandarban': '1',
     'Barguna': '2',
@@ -103,12 +113,19 @@ def predict_result():
         }
 
         population = {
-            '0': 63.50, '1': 85.00, '2': 87.00, '3': 21.50, '4': 163.10, '5': 23.60, '6': 77.50, '7': 21.70
+            '0': 63.50, '1': 85.00, '2': 87.00, '3': 21.50, '4': 163.10, '5': 23.60, '6': 77.50, '7': 21.70,
+    '8': 779.00, '9': 29.00, '10': 41.00, '11': 242.00, '12': 212.00, '13': 168.00, '14': 48.00, '15': 23.40,
+    '16': 29.50, '17': 39.00, '18': 22.00, '19': 23.30, '20': 24.00, '21': 34.50, '22': 15.00, '23': 16.30,
+    '24': 16.50, '25': 70.00, '26': 56.00, '27': 55.00, '28': 16.20, '29': 44.30, '30': 21.00, '31': 10.50,
+    '32': 10.00, '33': 14.00, '34': 18.40, '35': 10.00, '36': 43.20, '37': 23.50, '38': 39.00, '39': 35.40,
+    '40': 14.70, '41': 51.20, '42': 34.80, '43': 23.60, '44': 34.20, '45': 23.50, '46': 40.00, '47': 21.10,
+    '48': 13.00, '49': 23.80, '50': 15.00, '51': 16.00, '52': 70.50, '53': 18.00, '54': 18.40, '55': 21.10,
+    '56': 15.50, '57': 22.50, '58': 39.50, '59': 31.10, '60': 31.50, '61': 23.00, '62': 13.20
         }
 
         # Get district and crime codes from input data
-        district_name = data["district"]
-        district_code = district_names[district_name]
+        district_name = data["District"]
+        district_code = districts_names[district_name]
         
         crime_name = data["Crime"]
         crime_code = crimes_names[crime_name]
@@ -116,29 +133,28 @@ def predict_result():
         year = data["Year"]
 
         # Map the district name to district code
-        if district_name not in district_names:
+        if district_name not in districts_names:
             return jsonify({"error": f"district '{district_name}' not found"}), 400
 
         # Get population for the district
         pop = population[district_code]
-
+        print('pop && ', pop)
         # Predict the crime rate using the model
         crime_rate = crime_data.predict([[year, district_code, crime_code, pop]])[0]
         print(crime_rate)
 
         # Determine the crime status based on the predicted crime rate
         if crime_rate <= 1:
-            crime_status = "Very Low Crime Area"
+            crime_status = "Minimal Crime Rate"
         elif crime_rate <= 5:
-            crime_status = "Low Crime Area"
+            crime_status = "Low Crime Rate"
         elif crime_rate <= 15:
-            crime_status = "High Crime Area"
+            crime_status = "Moderate Crime Rate"
         else:
-            crime_status = "Very High Crime Area"
+            crime_status = "High Crime Rate"
 
         # Calculate the estimated number of crime cases
         cases = max(1, round(crime_rate * pop))
-        print("cases", cases)
 
         # Return the result as JSON
         return jsonify({
